@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://piano:${DB_PASSWORD:-piano_secret}@db:5432/pianobeauty
+      DATABASE_URL: ${DATABASE_URL:postgresql://pianobeauty:${DB_PASSWORD:-piano_secret}@localhost:5432/pianobeauty}
       JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret_in_production}
       PORT: 4000
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
