@@ -1,40 +1,41 @@
 version: "3.9"
 
 services:
-  db:
-    image: postgres:16-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-pianobeauty}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-pianobeauty}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pianobeauty}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  app:
-    build: .
-    restart: always
-    depends_on:
-      db:
-        condition: service_healthy
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://piano:${DB_PASSWORD:-piano_secret}@db:5432/pianobeauty
+      JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret_in_production}
+      PORT: 4000
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:4000}
+      NODE_ENV: production
+    ports:
+      - "4000:4000"
+    volumes:
+      - uploads_data:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:4000}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://backend:4000
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      AUTH_SECRET: ${AUTH_SECRET:-change_this_secret_in_production}
+      NODE_ENV: production
     ports:
       - "3000:3000"
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-pianobeauty}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-pianobeauty}?schema=public
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      NEXT_PUBLIC_URL: ${NEXT_PUBLIC_URL:-http://localhost:3000}
-      NODE_ENV: production
-    volumes:
-      - uploads:/app/public/uploads
+    depends_on:
+      - backend
 
 volumes:
-  postgres_data:
-  uploads:
+  uploads_data:
