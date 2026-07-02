@@ -13,7 +13,7 @@ ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NODE_OPTIONS="--max-old-space-size=1536"
-RUN npm run build --no-turbopack
+RUN npm run build
 
 FROM base AS runner
 ENV NODE_ENV=production
