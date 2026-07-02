@@ -1,45 +1,29 @@
-FROM node:22-alpine AS base
-
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:22-alpine AS builder
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY backend/package*.json ./
+RUN npm ci --ignore-scripts
 
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-RUN npx prisma generate
+COPY backend/ .
+RUN npx prisma generate --config prisma/prisma.config.ts
 RUN npm run build
 
-FROM base AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
-
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nodeapp
 
-COPY --from=builder /app/public ./public
-
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./
 
-USER nextjs
+RUN mkdir uploads && chown nodeapp:nodejs uploads
+USER nodeapp
 
-EXPOSE 3000
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "server.js"]
+EXPOSE 4000
+CMD ["node", "dist/app.js"]

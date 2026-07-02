@@ -1,7 +1,7 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY . .
 RUN npx prisma generate --config prisma/prisma.config.ts
 RUN npm run build
