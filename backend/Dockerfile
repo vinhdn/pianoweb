@@ -23,4 +23,4 @@ RUN mkdir uploads && chown nodeapp:nodejs uploads
 USER nodeapp
 
 EXPOSE 4000
-CMD ["node", "dist/app.js"]
+CMD ["sh", "-c", "node_modules/.bin/prisma db push --config prisma/prisma.config.ts && node dist/app.js"]
