@@ -8,10 +8,10 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL:postgresql://pianobeauty:${DB_PASSWORD:-piano_secret}@localhost:5432/pianobeauty}
+      DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret_in_production}
       PORT: 4000
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
       BACKEND_URL: ${BACKEND_URL:-http://localhost:4000}
       NODE_ENV: production
     ports:
@@ -25,15 +25,15 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:4000}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3001}
     restart: unless-stopped
     environment:
-      BACKEND_URL: http://backend:4000
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:4000}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
       AUTH_SECRET: ${AUTH_SECRET:-change_this_secret_in_production}
       NODE_ENV: production
     ports:
-      - "3000:3000"
+      - "3001:3001"
     depends_on:
       - backend
 
